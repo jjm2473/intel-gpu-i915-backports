@@ -2,6 +2,7 @@
 /*
  * Copyright © 2022 Intel Corporation
  */
+#if IS_ENABLED(CPTCFG_INTEL_VSEC)
 #include <linux/intel_vsec.h>
 
 #include "i915_drv.h"
@@ -97,3 +98,7 @@ void intel_vsec_init(struct drm_i915_private *dev_priv)
 	intel_vsec_register(pdev, &dg2_info);
 }
 MODULE_IMPORT_NS(INTEL_VSEC);
+#else
+#include "i915_drv.h"
+void intel_vsec_init(struct drm_i915_private *dev_priv){}
+#endif
