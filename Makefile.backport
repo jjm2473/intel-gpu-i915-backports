@@ -196,7 +196,7 @@ endif
 
 endif
 
-ifeq ($(KERNELRELEASE),)
+ifeq ($(KERNELVERSION),)
 # disable built-in rules for this file
 .SUFFIXES:
 
@@ -219,7 +219,12 @@ backport-include/backport/backport_path.h: .config Kconfig.versions Kconfig.kern
 		echo "#define BACKPORT_PATH $(shell pwd)"		;\
 		echo ""							;\
 		echo "#endif /* BACKPORTED_PATH_INCLUDED */"		;\
-		) > backport-include/backport/backport_path.h
+		) > $@.new
+	@if cmp -s $@ $@.new; then \
+                rm -f $@.new; \
+        else \
+                mv $@.new $@; \
+        fi
 	@echo " done."
 
 ###

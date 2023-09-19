@@ -236,9 +236,6 @@ i915-y += gt/uc/intel_uc.o \
 # graphics system controller (GSC) support
 i915-y += gt/intel_gsc.o
 
-# graphics spi device (DGFX) support
-i915-y += spi/intel_spi.o
-
 # Virtualization support
 iov-y += \
 	i915_sriov.o \
@@ -408,9 +405,6 @@ include $(src)/gvt/Makefile
 obj-$(CPTCFG_DRM_I915) += i915.o
 obj-$(CPTCFG_DRM_I915_GVT_KVMGT) += gvt/kvmgt.o
 obj-$(CPTCFG_DRM_I915_INTEL_FABRIC) += fabric/
-
-obj-m += i915_spi.o
-i915_spi-y := spi/intel_spi_drv.o
 
 # header test
 

@@ -1068,6 +1068,6 @@ TRACE_EVENT(i915_vm_prefetch,
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_PATH BACKPORT_PATH/drivers/gpu/drm/i915
+#define TRACE_INCLUDE_PATH .
 #define TRACE_INCLUDE_FILE i915_trace
 #include <trace/define_trace.h>

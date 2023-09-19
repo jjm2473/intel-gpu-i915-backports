@@ -2,10 +2,10 @@
 # Makefile for the output source package
 #
 
-ifeq ($(KERNELRELEASE),)
+ifeq ($(KERNELVERSION),)
 
 MAKEFLAGS += --no-print-directory
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 BACKPORT_DIR := $(shell pwd)
 
 KMODDIR ?= updates
@@ -19,6 +19,7 @@ KLIB_BUILD ?= $(KLIB)/build/
 KERNEL_CONFIG := $(KLIB_BUILD)/.config
 KERNEL_MAKEFILE := $(KLIB_BUILD)/Makefile
 CONFIG_MD5 := $(shell md5sum $(KERNEL_CONFIG) 2>/dev/null | sed 's/\s.*//')
+STAMP_KERNEL_CONFIG := .kernel_config_md5_$(CONFIG_MD5)
 KBUILD_MODPOST_WARN := 1
 DEB_PKG_DISTRO_TARGETS := i915dkmsdeb-pkg bindeb-pkg
 RPM_PKG_DISTRO_TARGETS := i915dkmsrpm-pkg
@@ -43,7 +44,8 @@ mrproper:
 	@rm -f backport-include/backport/autoconf.h
 	@$(MAKE) -f Makefile.real mrproper
 
-.DEFAULT:
+.SILENT: $(STAMP_KERNEL_CONFIG)
+$(STAMP_KERNEL_CONFIG):
 	@set -e ; test -f local-symbols || (						\
 	echo "/--------------"								;\
 	echo "| You shouldn't run make in the backports tree, but only in"		;\
@@ -56,7 +58,6 @@ mrproper:
 	echo "| for more options."							;\
 	echo "\\--"									;\
 	false)
-ifeq (,$(filter $(PKG_DISTRO_TARGETS), $(MAKECMDGOALS)))
 	@set -e ; test -f $(KERNEL_CONFIG) || (						\
 	echo "/--------------"								;\
 	echo "| Your kernel headers are incomplete/not installed."			;\
@@ -68,7 +69,11 @@ ifeq (,$(filter $(PKG_DISTRO_TARGETS), $(MAKECMDGOALS)))
 	echo "| (that isn't currently running.)"					;\
 	echo "\\--"									;\
 	false)
-	@set -e ; if [ "$$(cat .kernel_config_md5 2>/dev/null)" != "$(CONFIG_MD5)" ]	;\
+	@rm -f .kernel_config_md5_*
+	@touch $@
+
+Kconfig.kernel: $(STAMP_KERNEL_CONFIG) local-symbols
+	@set -e ; if true ;\
 	then 										\
 		echo -n "Generating local configuration database from kernel ..."	;\
 		grep -v -f local-symbols $(KERNEL_CONFIG) | grep = | (			\
@@ -91,7 +96,13 @@ ifeq (,$(filter $(PKG_DISTRO_TARGETS), $(MAKECMDGOALS)))
 				echo "    default $$v"					;\
 				echo ""							;\
 			done								\
-		) > Kconfig.kernel							;\
+		) > $@									;\
+		echo " done."								;\
+	fi
+
+Kconfig.versions: Kconfig.kernel
+	@set -e ; if true ;\
+	then 										\
 		kver=$$($(MAKE) --no-print-directory -C $(KLIB_BUILD) kernelversion |	\
 			sed 's/^\(\([3-5]\|2\.6\)\.[0-9]\+\).*/\1/;t;d')		;\
 		test "$$kver" != "" || echo "Kernel version parse failed!"		;\
@@ -116,11 +127,11 @@ ifeq (,$(filter $(PKG_DISTRO_TARGETS), $(MAKECMDGOALS)))
 		for v in $$(seq 0 $$RHEL_MINOR) ; do 					\
 			echo config BACKPORT_RHEL_KERNEL_$${RHEL_MAJOR}_$$v		;\
 			echo "    def_bool y"						;\
-		done >> Kconfig.versions						;\
-		echo " done."								;\
-	fi										;\
-	echo "$(CONFIG_MD5)" > .kernel_config_md5
-endif
+		done >> $@								;\
+	fi
+
+.DEFAULT:
+	@$(MAKE) Kconfig.versions
 	@$(MAKE) -f Makefile.real "$@"
 
 .PHONY: defconfig-help

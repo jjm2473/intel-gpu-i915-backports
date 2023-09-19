@@ -77,7 +77,7 @@ static inline unsigned int oo_objects(struct kmem_cache_order_objects x)
 
 #define count_partial  LINUX_I915_BACKPORT(count_partial)
 
-#if defined(CONFIG_SLUB_DEBUG) || defined(CONFIG_SYSFS)
+#if defined(CONFIG_SLUB_DEBUG)
 
 #ifdef COUNT_STRUCT_PAGE_PRESENT
 static unsigned long count_partial(struct kmem_cache_node *n,

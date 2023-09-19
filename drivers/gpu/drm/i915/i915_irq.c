@@ -31,6 +31,7 @@
 #include <linux/circ_buf.h>
 #include <linux/irq.h>
 #include <linux/slab.h>
+#include <linux/string.h>
 #include <linux/sysrq.h>
 
 #include <drm/drm_drv.h>
@@ -3662,11 +3663,11 @@ gen12_gt_hw_error_handler(struct intel_gt *gt,
 				}
 				raw_reg_write(regs, ERR_STAT_GT_COR_VCTR_REG(i), vctr);
 
-				if (!strcmp(name, "Undefined"))
+				if (!strncmp(name, "Undefined", 9))
 					intel_gt_log_driver_error(gt, INTEL_GT_DRIVER_ERROR_INTERRUPT,
 								  "%s CORRECTABLE error, ERR_VECT_GT_CORRECTABLE_%d:0x%08lx\n",
 								  name, i, vctr);
-				else if (strcmp(name, "SUBSLICE"))
+				else if (strncmp(name, "SUBSLICE", 8))
 					log_gt_hw_err(gt, "%s CORRECTABLE error, ERR_VECT_GT_CORRECTABLE_%d:0x%08lx\n",
 						      name, i, vctr);
 				error = true;
@@ -3745,11 +3746,11 @@ gen12_gt_hw_error_handler(struct intel_gt *gt,
 				}
 				raw_reg_write(regs, ERR_STAT_GT_FATAL_VCTR_REG(i), vctr);
 
-				if (!strcmp(name, "Undefined"))
+				if (!strncmp(name, "Undefined", 9))
 					intel_gt_log_driver_error(gt, INTEL_GT_DRIVER_ERROR_INTERRUPT,
 								  "%s FATAL error, ERR_VECT_GT_FATAL_%d:0x%08lx\n",
 								  name, i, vctr);
-				else if (strcmp(name, "SUBSLICE"))
+				else if (strncmp(name, "SUBSLICE", 8))
 					log_gt_hw_err(gt, "%s FATAL error, ERR_VECT_GT_FATAL_%d:0x%08lx\n",
 						      name, i, vctr);
 				error = true;

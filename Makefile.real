@@ -80,7 +80,12 @@ backport-include/backport/autoconf.h: .config Kconfig.versions Kconfig.kernel
 			esac						;\
 		done							;\
 		echo "#endif /* COMPAT_AUTOCONF_INCLUDED */"		;\
-	) > backport-include/backport/autoconf.h
+	) > $@.new
+	@if cmp -s $@ $@.new; then \
+                rm -f $@.new; \
+        else \
+                mv $@.new $@; \
+        fi
 	@echo " done."
 
 backport-include/backport/backport_path.h: .config Kconfig.versions Kconfig.kernel
@@ -96,7 +101,12 @@ backport-include/backport/backport_path.h: .config Kconfig.versions Kconfig.kern
 		echo "#define BACKPORT_PATH $(shell pwd)"		;\
 		echo ""							;\
 		echo "#endif /* BACKPORTED_PATH_INCLUDED */"		;\
-	) > backport-include/backport/backport_path.h
+	) > $@.new
+	@if cmp -s $@ $@.new; then \
+                rm -f $@.new; \
+        else \
+                mv $@.new $@; \
+        fi
 	@echo " done."
 
 .PHONY: modules
