@@ -5103,7 +5103,7 @@ intel_crtc_copy_uapi_to_hw_state_modeset(struct intel_atomic_state *state,
 		      &crtc_state->uapi.mode);
 	drm_mode_copy(&crtc_state->hw.adjusted_mode,
 		      &crtc_state->uapi.adjusted_mode);
-	crtc_state->hw.scaling_filter = crtc_state->uapi.scaling_filter;
+	crtc_state->hw.scaling_filter = DRM_SCALING_FILTER_DEFAULT;//crtc_state->uapi.scaling_filter;
 
 	intel_crtc_copy_uapi_to_hw_state_nomodeset(state, crtc);
 }
@@ -6846,9 +6846,11 @@ static int intel_atomic_check(struct drm_device *dev,
 		if (new_crtc_state->inherited != old_crtc_state->inherited)
 			new_crtc_state->uapi.mode_changed = true;
 
+#if 0
 		if (new_crtc_state->uapi.scaling_filter !=
 		    old_crtc_state->uapi.scaling_filter)
 			new_crtc_state->uapi.mode_changed = true;
+#endif
 	}
 
 	intel_vrr_check_modeset(state);

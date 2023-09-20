@@ -4,12 +4,13 @@
 #ifdef BPM_IOSYS_MAP_PRESENT
 #include_next <linux/iosys-map.h>
 #else
-#include <linux/dma-buf-map.h>
+#include <linux/dma-buf.h>
+
+#define iosys_map dma_buf_map
 #endif
 
 #ifdef BPM_IOSYS_MAP_MEMCPY_TO_ARG_OFFSET_ADDED
 #define iosys_map_memcpy_to LINUX_I915_BACKPORT(iosys_map_memcpy_to)
-#define iosys_map dma_buf_map
 
 /**
  * iosys_map_memcpy_to - Memcpy into offset of iosys_map
@@ -291,5 +292,81 @@ static inline void iosys_map_memset(struct iosys_map *dst, size_t offset,
 #define iosys_map_clear dma_buf_map_clear
 #define iosys_map_incr dma_buf_map_incr
 #endif
+
+
+/**
+ * iosys_map_set_vaddr - Sets a iosys mapping structure to an address in system memory
+ * @map:	The iosys_map structure
+ * @vaddr:	A system-memory address
+ *
+ * Sets the address and clears the I/O-memory flag.
+ */
+static inline void iosys_map_set_vaddr(struct iosys_map *map, void *vaddr)
+{
+	map->vaddr = vaddr;
+	map->is_iomem = false;
+}
+
+/**
+ * iosys_map_set_vaddr_iomem - Sets a iosys mapping structure to an address in I/O memory
+ * @map:		The iosys_map structure
+ * @vaddr_iomem:	An I/O-memory address
+ *
+ * Sets the address and the I/O-memory flag.
+ */
+static inline void iosys_map_set_vaddr_iomem(struct iosys_map *map,
+					     void __iomem *vaddr_iomem)
+{
+	map->vaddr_iomem = vaddr_iomem;
+	map->is_iomem = true;
+}
+
+/**
+ * iosys_map_is_null - Tests for a iosys mapping to be NULL
+ * @map:	The iosys_map structure
+ *
+ * Depending on the state of struct iosys_map.is_iomem, tests if the
+ * mapping is NULL.
+ *
+ * Returns:
+ * True if the mapping is NULL, or false otherwise.
+ */
+static inline bool iosys_map_is_null(const struct iosys_map *map)
+{
+	if (map->is_iomem)
+		return !map->vaddr_iomem;
+	return !map->vaddr;
+}
+
+/**
+ * iosys_map_is_set - Tests if the iosys mapping has been set
+ * @map:	The iosys_map structure
+ *
+ * Depending on the state of struct iosys_map.is_iomem, tests if the
+ * mapping has been set.
+ *
+ * Returns:
+ * True if the mapping is been set, or false otherwise.
+ */
+static inline bool iosys_map_is_set(const struct iosys_map *map)
+{
+	return !iosys_map_is_null(map);
+}
+
+/**
+ * iosys_map_incr - Increments the address stored in a iosys mapping
+ * @map:	The iosys_map structure
+ * @incr:	The number of bytes to increment
+ *
+ * Increments the address stored in a iosys mapping. Depending on the
+ * buffer's location, the correct value will be updated.
+ */
+static inline void iosys_map_incr(struct iosys_map *map, size_t incr)
+{
+	if (map->is_iomem)
+		map->vaddr_iomem += incr;
+	else
+		map->vaddr += incr;
+}
 
 #endif /* __BACKPORT_LINUX_IOSYS_MAP_H */

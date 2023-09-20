@@ -237,14 +237,10 @@
 
 #endif
 
-#if LINUX_VERSION_IS_GEQ(5,17,0)
-
 /*
  * 502fee2499277c drm/i915/dp: Use the drm helpers for getting max FRL rate.
  */
 #define MAX_FLR_NOT_PRESENT
-
-#endif
 
 #if LINUX_VERSION_IS_LESS(5,17,0)
 /*
@@ -512,6 +508,25 @@
  * <linux/platform_device.h> depending on which one is available 
  */
 #define BPM_MEI_AUX_BUS_AVAILABLE
+#endif
+
+
+#if LINUX_VERSION_IS_LESS(5,13,0)
+/*
+ * eb2dafbba8b82 tasklets: Prevent tasklet_unlock_spin_wait() deadlock on RT
+ *
+ */
+#define BPM_TASKLET_UNLOCK_SPIN_WAIT_NOT_PRESENT
+#define RB_FIND_NOT_PRESENT
+#define BPM_DP_READ_LTTPR_CAPS_DPCD_ARG_NOT_PRESENT
+#define BPM_PCI_REBAR_SIZE_NOT_PRESENT
+#define BPM_LOCKDEP_ASSERT_NOT_HELD_NOT_PRESENT
+#define BPM_PTRACE_MAY_ACCESS_NOT_PRESENT
+#define BPM_SEQPROP_SEQUENCE_NOT_PRESENT
+#define BPM_MIGHT_ALLOC_NOT_PRESENT
+#define BPM_VMA_SET_FILE_NOT_PRESENT
+#define BPM_IS_COW_MAPPING_NOT_PRESENT
+#define BPM_SWIOTLB_NR_TBL_NO_ARG_PRESENT
 #endif
 
 #endif /* _BP_LINUX_BACKPORT_MACRO_H */

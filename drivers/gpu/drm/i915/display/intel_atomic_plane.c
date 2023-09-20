@@ -336,7 +336,7 @@ void intel_plane_copy_uapi_to_hw_state(struct intel_plane_state *plane_state,
 	plane_state->hw.rotation = from_plane_state->uapi.rotation;
 	plane_state->hw.color_encoding = from_plane_state->uapi.color_encoding;
 	plane_state->hw.color_range = from_plane_state->uapi.color_range;
-	plane_state->hw.scaling_filter = from_plane_state->uapi.scaling_filter;
+	plane_state->hw.scaling_filter = DRM_SCALING_FILTER_DEFAULT;//from_plane_state->uapi.scaling_filter;
 
 	plane_state->uapi.src = drm_plane_state_src(&from_plane_state->uapi);
 	plane_state->uapi.dst = drm_plane_state_dest(&from_plane_state->uapi);

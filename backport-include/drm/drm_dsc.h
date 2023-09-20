@@ -15,4 +15,7 @@
 #include_next <drm/drm_dsc.h>
 #endif
 
+#define drm_dsc_dp_rc_buffer_size LINUX_I915_BACKPORT(drm_dsc_dp_rc_buffer_size)
+int drm_dsc_dp_rc_buffer_size(u8 rc_buffer_block_size, u8 rc_buffer_size);
+
 #endif /* _BACKPORT_DRM_DSC_H_ */

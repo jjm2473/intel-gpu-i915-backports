@@ -182,8 +182,12 @@ static void i915_gem_unmap_dma_buf(struct dma_buf_attachment *attach,
 	kfree(sgt);
 }
 
+#ifdef BPM_IOSYS_MAP_PRESENT
 static int i915_gem_dmabuf_vmap(struct dma_buf *dma_buf,
 				struct iosys_map *map)
+#else
+static void *i915_gem_dmabuf_vmap(struct dma_buf *dma_buf)
+#endif
 {
 	struct drm_i915_gem_object *obj = dma_buf_to_obj(dma_buf);
 	enum i915_map_type type;
@@ -191,16 +195,24 @@ static int i915_gem_dmabuf_vmap(struct dma_buf *dma_buf,
 
 	type = i915_coherent_map_type(to_i915(obj->base.dev), obj, true);
 	vaddr = i915_gem_object_pin_map_unlocked(obj, type);
+#ifdef BPM_IOSYS_MAP_PRESENT
 	if (IS_ERR(vaddr))
 		return PTR_ERR(vaddr);
 
 	iosys_map_set_vaddr(map, vaddr);
 
 	return 0;
+#else
+	return vaddr;
+#endif
 }
 
+#ifdef BPM_IOSYS_MAP_PRESENT
 static void i915_gem_dmabuf_vunmap(struct dma_buf *dma_buf,
 				   struct iosys_map *map)
+#else
+static void i915_gem_dmabuf_vunmap(struct dma_buf *dma_buf, void *vaddr)
+#endif
 {
 	struct drm_i915_gem_object *obj = dma_buf_to_obj(dma_buf);
 

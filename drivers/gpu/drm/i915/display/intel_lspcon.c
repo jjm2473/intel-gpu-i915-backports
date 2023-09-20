@@ -144,7 +144,7 @@ static enum drm_lspcon_mode lspcon_get_current_mode(struct intel_lspcon *lspcon)
 	enum drm_lspcon_mode current_mode;
 	struct i2c_adapter *adapter = &intel_dp->aux.ddc;
 
-	if (drm_lspcon_get_mode(intel_dp->aux.drm_dev, adapter, &current_mode)) {
+	if (drm_lspcon_get_mode(adapter, &current_mode)) {
 		drm_dbg_kms(&i915->drm, "Error reading LSPCON mode\n");
 		return DRM_LSPCON_MODE_INVALID;
 	}
@@ -185,7 +185,7 @@ static int lspcon_change_mode(struct intel_lspcon *lspcon,
 	enum drm_lspcon_mode current_mode;
 	struct i2c_adapter *adapter = &intel_dp->aux.ddc;
 
-	err = drm_lspcon_get_mode(intel_dp->aux.drm_dev, adapter, &current_mode);
+	err = drm_lspcon_get_mode(adapter, &current_mode);
 	if (err) {
 		drm_err(&i915->drm, "Error reading LSPCON mode\n");
 		return err;
@@ -196,7 +196,7 @@ static int lspcon_change_mode(struct intel_lspcon *lspcon,
 		return 0;
 	}
 
-	err = drm_lspcon_set_mode(intel_dp->aux.drm_dev, adapter, mode);
+	err = drm_lspcon_set_mode(adapter, mode);
 	if (err < 0) {
 		drm_err(&i915->drm, "LSPCON mode change failed\n");
 		return err;
@@ -242,7 +242,7 @@ static bool lspcon_probe(struct intel_lspcon *lspcon)
 		if (retry)
 			usleep_range(500, 1000);
 
-		adaptor_type = drm_dp_dual_mode_detect(intel_dp->aux.drm_dev, adapter);
+		adaptor_type = drm_dp_dual_mode_detect(adapter);
 		if (adaptor_type == DRM_DP_DUAL_MODE_LSPCON)
 			break;
 	}
@@ -308,7 +308,7 @@ static bool lspcon_parade_fw_ready(struct drm_dp_aux *aux)
 		ret = drm_dp_dpcd_read(aux, LSPCON_PARADE_AVI_IF_CTRL,
 				       &avi_if_ctrl, 1);
 		if (ret < 0) {
-			drm_err(aux->drm_dev, "Failed to read AVI IF control\n");
+			DRM_ERROR("Failed to read AVI IF control\n");
 			return false;
 		}
 
@@ -316,7 +316,7 @@ static bool lspcon_parade_fw_ready(struct drm_dp_aux *aux)
 			return true;
 	}
 
-	drm_err(aux->drm_dev, "Parade FW not ready to accept AVI IF\n");
+	DRM_ERROR("Parade FW not ready to accept AVI IF\n");
 	return false;
 }
 
@@ -331,7 +331,7 @@ static bool _lspcon_parade_write_infoframe_blocks(struct drm_dp_aux *aux,
 
 	while (block_count < 4) {
 		if (!lspcon_parade_fw_ready(aux)) {
-			drm_dbg_kms(aux->drm_dev, "LSPCON FW not ready, block %d\n",
+			DRM_DEBUG_DP("LSPCON FW not ready, block %d\n",
 				    block_count);
 			return false;
 		}
@@ -340,7 +340,7 @@ static bool _lspcon_parade_write_infoframe_blocks(struct drm_dp_aux *aux,
 		data = avi_buf + block_count * 8;
 		ret = drm_dp_dpcd_write(aux, reg, data, 8);
 		if (ret < 0) {
-			drm_err(aux->drm_dev, "Failed to write AVI IF block %d\n",
+			DRM_ERROR("Failed to write AVI IF block %d\n",
 				block_count);
 			return false;
 		}
@@ -355,7 +355,7 @@ static bool _lspcon_parade_write_infoframe_blocks(struct drm_dp_aux *aux,
 		avi_if_ctrl = LSPCON_PARADE_AVI_IF_KICKOFF | block_count;
 		ret = drm_dp_dpcd_write(aux, reg, &avi_if_ctrl, 1);
 		if (ret < 0) {
-			drm_err(aux->drm_dev, "Failed to update (0x%x), block %d\n",
+			DRM_ERROR("Failed to update (0x%x), block %d\n",
 				reg, block_count);
 			return false;
 		}
@@ -363,7 +363,7 @@ static bool _lspcon_parade_write_infoframe_blocks(struct drm_dp_aux *aux,
 		block_count++;
 	}
 
-	drm_dbg_kms(aux->drm_dev, "Wrote AVI IF blocks successfully\n");
+	DRM_DEBUG_DP("Wrote AVI IF blocks successfully\n");
 	return true;
 }
 
@@ -385,14 +385,14 @@ static bool _lspcon_write_avi_infoframe_parade(struct drm_dp_aux *aux,
 	 */
 
 	if (len > LSPCON_PARADE_AVI_IF_DATA_SIZE - 1) {
-		drm_err(aux->drm_dev, "Invalid length of infoframes\n");
+		DRM_ERROR("Invalid length of infoframes\n");
 		return false;
 	}
 
 	memcpy(&avi_if[1], frame, len);
 
 	if (!_lspcon_parade_write_infoframe_blocks(aux, avi_if)) {
-		drm_dbg_kms(aux->drm_dev, "Failed to write infoframe blocks\n");
+		DRM_DEBUG_DP("Failed to write infoframe blocks\n");
 		return false;
 	}
 
@@ -419,7 +419,7 @@ static bool _lspcon_write_avi_infoframe_mca(struct drm_dp_aux *aux,
 				mdelay(50);
 				continue;
 			} else {
-				drm_err(aux->drm_dev, "DPCD write failed at:0x%x\n", reg);
+				DRM_ERROR("DPCD write failed at:0x%x\n", reg);
 				return false;
 			}
 		}
@@ -430,7 +430,7 @@ static bool _lspcon_write_avi_infoframe_mca(struct drm_dp_aux *aux,
 	reg = LSPCON_MCA_AVI_IF_CTRL;
 	ret = drm_dp_dpcd_read(aux, reg, &val, 1);
 	if (ret < 0) {
-		drm_err(aux->drm_dev, "DPCD read failed, address 0x%x\n", reg);
+		DRM_ERROR("DPCD read failed, address 0x%x\n", reg);
 		return false;
 	}
 
@@ -440,19 +440,19 @@ static bool _lspcon_write_avi_infoframe_mca(struct drm_dp_aux *aux,
 
 	ret = drm_dp_dpcd_write(aux, reg, &val, 1);
 	if (ret < 0) {
-		drm_err(aux->drm_dev, "DPCD read failed, address 0x%x\n", reg);
+		DRM_ERROR("DPCD read failed, address 0x%x\n", reg);
 		return false;
 	}
 
 	val = 0;
 	ret = drm_dp_dpcd_read(aux, reg, &val, 1);
 	if (ret < 0) {
-		drm_err(aux->drm_dev, "DPCD read failed, address 0x%x\n", reg);
+		DRM_ERROR("DPCD read failed, address 0x%x\n", reg);
 		return false;
 	}
 
 	if (val == LSPCON_MCA_AVI_IF_HANDLED)
-		drm_dbg_kms(aux->drm_dev, "AVI IF handled by FW\n");
+		DRM_DEBUG_DP("AVI IF handled by FW\n");
 
 	return true;
 }
@@ -584,7 +584,7 @@ static bool _lspcon_read_avi_infoframe_enabled_mca(struct drm_dp_aux *aux)
 
 	ret = drm_dp_dpcd_read(aux, reg, &val, 1);
 	if (ret < 0) {
-		drm_err(aux->drm_dev, "DPCD read failed, address 0x%x\n", reg);
+		DRM_ERROR("DPCD read failed, address 0x%x\n", reg);
 		return false;
 	}
 
@@ -599,7 +599,7 @@ static bool _lspcon_read_avi_infoframe_enabled_parade(struct drm_dp_aux *aux)
 
 	ret = drm_dp_dpcd_read(aux, reg, &val, 1);
 	if (ret < 0) {
-		drm_err(aux->drm_dev, "DPCD read failed, address 0x%x\n", reg);
+		DRM_ERROR("DPCD read failed, address 0x%x\n", reg);
 		return false;
 	}
 

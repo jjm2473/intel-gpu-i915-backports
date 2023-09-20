@@ -148,15 +148,33 @@ static inline bool handle_valid(unsigned long handle)
 	return !!(handle & ~0xff);
 }
 
-static ssize_t available_instances_show(struct mdev_type *mtype,
-					struct mdev_type_attribute *attr,
+static struct intel_vgpu_type *intel_gvt_find_vgpu_type(struct intel_gvt *gvt,
+		const char *name)
+{
+	const char *driver_name =
+		dev_driver_string(&gvt->gt->i915->drm.pdev->dev);
+	int i;
+
+	name += strlen(driver_name) + 1;
+	for (i = 0; i < gvt->num_types; i++) {
+		struct intel_vgpu_type *t = &gvt->types[i];
+
+		if (!strncmp(t->name, name, sizeof(t->name)))
+			return t;
+	}
+
+	return NULL;
+}
+
+static ssize_t available_instances_show(struct kobject *kobj,
+					struct device *dev,
 					char *buf)
 {
 	struct intel_vgpu_type *type;
 	unsigned int num = 0;
-	struct intel_gvt *gvt = kdev_to_i915(mtype_get_parent_dev(mtype))->gvt;
+	void *gvt = kdev_to_i915(dev)->gvt;
 
-	type = &gvt->types[mtype_get_type_group_id(mtype)];
+	type = intel_gvt_find_vgpu_type(gvt, kobject_name(kobj));
 	if (!type)
 		num = 0;
 	else
@@ -165,19 +183,19 @@ static ssize_t available_instances_show(struct mdev_type *mtype,
 	return sprintf(buf, "%u\n", num);
 }
 
-static ssize_t device_api_show(struct mdev_type *mtype,
-			       struct mdev_type_attribute *attr, char *buf)
+static ssize_t device_api_show(struct kobject *kobj, struct device *dev,
+					char *buf)
 {
 	return sprintf(buf, "%s\n", VFIO_DEVICE_API_PCI_STRING);
 }
 
-static ssize_t description_show(struct mdev_type *mtype,
-				struct mdev_type_attribute *attr, char *buf)
+static ssize_t description_show(struct kobject *kobj, struct device *dev,
+					char *buf)
 {
 	struct intel_vgpu_type *type;
-	struct intel_gvt *gvt = kdev_to_i915(mtype_get_parent_dev(mtype))->gvt;
+	void *gvt = kdev_to_i915(dev)->gvt;
 
-	type = &gvt->types[mtype_get_type_group_id(mtype)];
+	type = intel_gvt_find_vgpu_type(gvt, kobject_name(kobj));
 	if (!type)
 		return 0;
 
@@ -791,7 +809,7 @@ static void kvmgt_put_vfio_device(void *vgpu)
 	vfio_device_put(vdev->vfio_device);
 }
 
-static int intel_vgpu_create(struct mdev_device *mdev)
+static int intel_vgpu_create(struct kobject *kobj, struct mdev_device *mdev)
 {
 	struct intel_vgpu *vgpu = NULL;
 	struct intel_vgpu_type *type;
@@ -802,8 +820,10 @@ static int intel_vgpu_create(struct mdev_device *mdev)
 	pdev = mdev_parent_dev(mdev);
 	gvt = kdev_to_i915(pdev)->gvt;
 
-	type = &gvt->types[mdev_get_type_group_id(mdev)];
+	type = intel_gvt_find_vgpu_type(gvt, kobject_name(kobj));
 	if (!type) {
+		gvt_vgpu_err("failed to find type %s to create\n",
+						kobject_name(kobj));
 		ret = -EINVAL;
 		goto out;
 	}
@@ -1757,8 +1777,8 @@ static struct mdev_parent_ops intel_vgpu_ops = {
 	.create			= intel_vgpu_create,
 	.remove			= intel_vgpu_remove,
 
-	.open_device		= intel_vgpu_open_device,
-	.close_device		= intel_vgpu_close_device,
+	.open			= intel_vgpu_open_device,
+	.release		= intel_vgpu_close_device,
 
 	.read			= intel_vgpu_read,
 	.write			= intel_vgpu_write,
@@ -1810,7 +1830,7 @@ static int kvmgt_page_track_add(unsigned long handle, u64 gfn)
 		return -EINVAL;
 	}
 
-	write_lock(&kvm->mmu_lock);
+	spin_lock(&kvm->mmu_lock);
 
 	if (kvmgt_gfn_is_write_protected(info, gfn))
 		goto out;
@@ -1819,7 +1839,7 @@ static int kvmgt_page_track_add(unsigned long handle, u64 gfn)
 	kvmgt_protect_table_add(info, gfn);
 
 out:
-	write_unlock(&kvm->mmu_lock);
+	spin_unlock(&kvm->mmu_lock);
 	srcu_read_unlock(&kvm->srcu, idx);
 	return 0;
 }
@@ -1844,7 +1864,7 @@ static int kvmgt_page_track_remove(unsigned long handle, u64 gfn)
 		return -EINVAL;
 	}
 
-	write_lock(&kvm->mmu_lock);
+	spin_lock(&kvm->mmu_lock);
 
 	if (!kvmgt_gfn_is_write_protected(info, gfn))
 		goto out;
@@ -1853,7 +1873,7 @@ static int kvmgt_page_track_remove(unsigned long handle, u64 gfn)
 	kvmgt_protect_table_del(info, gfn);
 
 out:
-	write_unlock(&kvm->mmu_lock);
+	spin_unlock(&kvm->mmu_lock);
 	srcu_read_unlock(&kvm->srcu, idx);
 	return 0;
 }
@@ -1879,7 +1899,7 @@ static void kvmgt_page_track_flush_slot(struct kvm *kvm,
 	struct kvmgt_guest_info *info = container_of(node,
 					struct kvmgt_guest_info, track_node);
 
-	write_lock(&kvm->mmu_lock);
+	spin_lock(&kvm->mmu_lock);
 	for (i = 0; i < slot->npages; i++) {
 		gfn = slot->base_gfn + i;
 		if (kvmgt_gfn_is_write_protected(info, gfn)) {
@@ -1888,7 +1908,7 @@ static void kvmgt_page_track_flush_slot(struct kvm *kvm,
 			kvmgt_protect_table_del(info, gfn);
 		}
 	}
-	write_unlock(&kvm->mmu_lock);
+	spin_unlock(&kvm->mmu_lock);
 }
 
 static bool __kvmgt_vgpu_exist(struct intel_vgpu *vgpu, struct kvm *kvm)

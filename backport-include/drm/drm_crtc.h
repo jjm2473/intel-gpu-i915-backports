@@ -42,4 +42,8 @@
 #include <linux/backlight.h>
 #endif
 
+#define drm_crtc_create_scaling_filter_property LINUX_I915_BACKPORT(drm_crtc_create_scaling_filter_property)
+int drm_crtc_create_scaling_filter_property(struct drm_crtc *crtc,
+					    unsigned int supported_filters);
+
 #endif /* _BACKPORT_DRM_CRTC_H_ */

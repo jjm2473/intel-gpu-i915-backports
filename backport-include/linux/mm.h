@@ -79,4 +79,17 @@ static inline void *folio_address(const struct folio *folio)
 }
 
 #endif /* FOLIO_ADDRESS_PRESENT */
+
+#ifdef BPM_VMA_SET_FILE_NOT_PRESENT
+#define vma_set_file LINUX_I915_BACKPORT(vma_set_file)
+void vma_set_file(struct vm_area_struct *vma, struct file *file);
+#endif
+
+#ifdef BPM_IS_COW_MAPPING_NOT_PRESENT
+static inline bool is_cow_mapping(vm_flags_t flags)
+{
+	return (flags & (VM_SHARED | VM_MAYWRITE)) == VM_MAYWRITE;
+}
+#endif
+
 #endif /* __BACKPORT_MM_H */

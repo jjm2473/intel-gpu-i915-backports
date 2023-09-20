@@ -73,7 +73,7 @@ static int intel_dp_mst_compute_link_config(struct intel_encoder *encoder,
 		slots = drm_dp_atomic_find_vcpi_slots(state, &intel_dp->mst_mgr,
 						      connector->port,
 						      crtc_state->pbn,
-						      drm_dp_get_vc_payload_bw(&intel_dp->mst_mgr,
+						      drm_dp_get_vc_payload_bw(
 									       crtc_state->port_clock,
 									       crtc_state->lane_count));
 		if (slots == -EDEADLK)
@@ -882,13 +882,11 @@ intel_dp_mst_mode_valid_ctx(struct drm_connector *connector,
 }
 
 static struct drm_encoder *intel_mst_atomic_best_encoder(struct drm_connector *connector,
-							 struct drm_atomic_state *state)
+							 struct drm_connector_state *state)
 {
-	struct drm_connector_state *connector_state = drm_atomic_get_new_connector_state(state,
-											 connector);
 	struct intel_connector *intel_connector = to_intel_connector(connector);
 	struct intel_dp *intel_dp = intel_connector->mst_port;
-	struct intel_crtc *crtc = to_intel_crtc(connector_state->crtc);
+	struct intel_crtc *crtc = to_intel_crtc(state->crtc);
 
 	return &intel_dp->mst_encoders[crtc->pipe]->base.base;
 }
@@ -1113,8 +1111,8 @@ intel_dp_mst_encoder_init(struct intel_digital_port *dig_port, int conn_base_id)
 	struct intel_dp *intel_dp = &dig_port->dp;
 	enum port port = dig_port->base.port;
 	int ret;
-	int max_source_rate =
-		intel_dp->source_rates[intel_dp->num_source_rates - 1];
+//	int max_source_rate =
+//		intel_dp->source_rates[intel_dp->num_source_rates - 1];
 
 	if (!HAS_DP_MST(i915) || intel_dp_is_edp(intel_dp))
 		return 0;
@@ -1131,8 +1129,8 @@ intel_dp_mst_encoder_init(struct intel_digital_port *dig_port, int conn_base_id)
 	intel_dp_create_fake_mst_encoders(dig_port);
 	ret = drm_dp_mst_topology_mgr_init(&intel_dp->mst_mgr, &i915->drm,
 					   &intel_dp->aux, 16, 3,
-					   dig_port->max_lanes,
-					   max_source_rate,
+//					   dig_port->max_lanes,
+//					   max_source_rate,
 					   conn_base_id);
 	if (ret) {
 		intel_dp->mst_mgr.cbs = NULL;

@@ -20,4 +20,15 @@ struct lockdep_map { };
 #endif /* CONFIG_LOCKDEP */
 #endif /* LINUX_VERSION_IS_LESS(4,15,0) */
 
+#ifdef BPM_LOCKDEP_ASSERT_NOT_HELD_NOT_PRESENT
+
+#ifdef CONFIG_LOCKDEP
+#define lockdep_assert_not_held(l)      \
+	        lockdep_assert(lockdep_is_held(l) != LOCK_STATE_HELD)
+#else
+#define lockdep_assert_not_held(l)              do { (void)(l); } while (0)
+#endif
+
+#endif
+
 #endif /* __BACKPORT_LINUX_LOCKDEP_H */

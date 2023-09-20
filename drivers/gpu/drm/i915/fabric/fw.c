@@ -9,7 +9,6 @@
 #include <linux/crc32c.h>
 #include <linux/delay.h>
 #include <linux/firmware.h>
-#include <linux/math.h>
 #include <linux/module.h>
 #include <linux/mtd/mtd.h>
 #include <linux/overflow.h>

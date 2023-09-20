@@ -261,4 +261,19 @@ backport_pci_disable_link_state(struct pci_dev *pdev, int state)
 #endif /* < 5.3 */
 #endif /* defined(CONFIG_PCI) */
 
+#ifdef BPM_PCI_REBAR_SIZE_NOT_PRESENT
+#define pci_rebar_get_possible_sizes LINUX_I915_BACKPORT(pci_rebar_get_possible_sizes)
+u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
+
+/*actually introduced in 5.12, for now keeping 5.10*/
+static inline int pci_rebar_bytes_to_size(u64 bytes)
+{
+        bytes = roundup_pow_of_two(bytes);
+
+        /* Return BAR size as defined in the resizable BAR specification */
+        return max(ilog2(bytes), 20) - 20;
+}
+
+#endif /* BPM_PCI_REBAR_SIZE_NOT_PRESENT */
+
 #endif /* _BACKPORT_LINUX_PCI_H */

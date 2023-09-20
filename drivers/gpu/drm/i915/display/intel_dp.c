@@ -2500,6 +2500,7 @@ static void intel_dp_get_pcon_dsc_cap(struct intel_dp *intel_dp)
 		    (int)sizeof(intel_dp->pcon_dsc_dpcd), intel_dp->pcon_dsc_dpcd);
 }
 
+#if 0
 static int intel_dp_pcon_get_frl_mask(u8 frl_bw_mask)
 {
 	int bw_gbps[] = {9, 18, 24, 32, 40, 48};
@@ -2534,6 +2535,9 @@ static int intel_dp_pcon_set_frl_mask(int max_frl)
 
 static int intel_dp_hdmi_sink_max_frl(struct intel_dp *intel_dp)
 {
+#if 1
+	return 0;
+#else
 	struct intel_connector *intel_connector = intel_dp->attached_connector;
 	struct drm_connector *connector = &intel_connector->base;
 #ifdef MAX_FLR_NOT_PRESENT
@@ -2562,6 +2566,7 @@ static int intel_dp_hdmi_sink_max_frl(struct intel_dp *intel_dp)
 #endif
 
 	return max_frl_rate;
+#endif
 }
 
 static bool
@@ -2674,9 +2679,11 @@ int intel_dp_pcon_set_tmds_mode(struct intel_dp *intel_dp)
 
 	return 0;
 }
+#endif
 
 void intel_dp_check_frl_training(struct intel_dp *intel_dp)
 {
+#if 0
 	struct drm_i915_private *dev_priv = dp_to_i915(intel_dp);
 
 	/*
@@ -2701,8 +2708,10 @@ void intel_dp_check_frl_training(struct intel_dp *intel_dp)
 	} else {
 		drm_dbg(&dev_priv->drm, "FRL training Completed\n");
 	}
+#endif
 }
 
+#if 0
 static int
 intel_dp_pcon_dsc_enc_slice_height(const struct intel_crtc_state *crtc_state)
 {
@@ -2751,11 +2760,13 @@ intel_dp_pcon_dsc_enc_bpp(struct intel_dp *intel_dp,
 				      num_slices, output_format, bpc, hdmi_all_bpp,
 				      hdmi_max_chunk_bytes);
 }
+#endif
 
 void
 intel_dp_pcon_dsc_configure(struct intel_dp *intel_dp,
 			    const struct intel_crtc_state *crtc_state)
 {
+#if 0
 	u8 pps_param[6];
 	int slice_height;
 	int slice_width;
@@ -2805,6 +2816,7 @@ intel_dp_pcon_dsc_configure(struct intel_dp *intel_dp,
 	ret = drm_dp_pcon_pps_override_param(&intel_dp->aux, pps_param);
 	if (ret < 0)
 		drm_dbg_kms(&i915->drm, "Failed to set pcon DSC\n");
+#endif
 }
 
 void intel_dp_configure_protocol_converter(struct intel_dp *intel_dp,
@@ -4091,6 +4103,7 @@ intel_dp_check_mst_status(struct intel_dp *intel_dp)
 	return link_ok;
 }
 
+#if 0
 static void
 intel_dp_handle_hdmi_link_status_change(struct intel_dp *intel_dp)
 {
@@ -4112,6 +4125,7 @@ intel_dp_handle_hdmi_link_status_change(struct intel_dp *intel_dp)
 		intel_dp_check_frl_training(intel_dp);
 	}
 }
+#endif
 
 static bool
 intel_dp_needs_link_retrain(struct intel_dp *intel_dp)
@@ -4445,6 +4459,7 @@ static void intel_dp_check_device_service_irq(struct intel_dp *intel_dp)
 		drm_dbg_kms(&i915->drm, "Sink specific irq unhandled\n");
 }
 
+#if 0
 static void intel_dp_check_link_service_irq(struct intel_dp *intel_dp)
 {
 	u8 val;
@@ -4463,6 +4478,7 @@ static void intel_dp_check_link_service_irq(struct intel_dp *intel_dp)
 	if (val & HDMI_LINK_STATUS_CHANGED)
 		intel_dp_handle_hdmi_link_status_change(intel_dp);
 }
+#endif
 
 /*
  * According to DP spec
@@ -4504,7 +4520,7 @@ intel_dp_short_pulse(struct intel_dp *intel_dp)
 	}
 
 	intel_dp_check_device_service_irq(intel_dp);
-	intel_dp_check_link_service_irq(intel_dp);
+//	intel_dp_check_link_service_irq(intel_dp);
 
 	/* Handle CEC interrupts, if any */
 	drm_dp_cec_irq(&intel_dp->aux);
@@ -5586,8 +5602,8 @@ intel_dp_init_connector(struct intel_digital_port *dig_port,
 			       (temp & ~0xf) | 0xd);
 	}
 
-	intel_dp->frl.is_trained = false;
-	intel_dp->frl.trained_rate_gbps = 0;
+//	intel_dp->frl.is_trained = false;
+//	intel_dp->frl.trained_rate_gbps = 0;
 
 	intel_psr_init(intel_dp);
 

@@ -10,6 +10,7 @@
 #include <linux/mman.h>
 #include <linux/ptrace.h>
 #include <linux/dma-buf.h>
+#include <linux/swap.h>
 
 #include "gem/i915_gem_context.h"
 #include "gem/i915_gem_mman.h"

@@ -40,7 +40,6 @@
 
 #include <drm/drm_connector.h>
 #include <drm/i915_cp_fw_hdcp_interface.h>
-#include <drm/ttm/ttm_device.h>
 
 #include "display/intel_cdclk.h"
 #include "display/intel_display.h"
@@ -916,9 +915,6 @@ struct drm_i915_private {
 
 	/* Mutex to protect the above hdcp component related values. */
 	struct mutex hdcp_comp_mutex;
-
-	/* The TTM device structure. */
-	struct ttm_device bdev;
 
 	bool bind_ctxt_ready;
 

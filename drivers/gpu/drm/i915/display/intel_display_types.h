@@ -1748,7 +1748,7 @@ struct intel_dp {
 	bool hobl_failed;
 	bool hobl_active;
 
-	struct intel_dp_pcon_frl frl;
+//	struct intel_dp_pcon_frl frl;
 
 	struct intel_psr psr;
 
