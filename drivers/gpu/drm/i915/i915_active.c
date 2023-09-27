@@ -188,6 +188,9 @@ active_work(struct work_struct *wrk)
 static void
 active_retire(struct i915_active *ref)
 {
+	if (WARN_ON(IS_ERR_OR_NULL(ref))) {
+		return;
+	}
 	GEM_BUG_ON(!atomic_read(&ref->count));
 	if (atomic_add_unless(&ref->count, -1, 1))
 		return;
