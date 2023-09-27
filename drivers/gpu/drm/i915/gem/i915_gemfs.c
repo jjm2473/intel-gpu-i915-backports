@@ -56,5 +56,8 @@ err:
 
 void i915_gemfs_fini(struct drm_i915_private *i915)
 {
+	if (WARN_ON(IS_ERR_OR_NULL(i915))) {
+		return;
+	}
 	kern_unmount(i915->mm.gemfs);
 }
