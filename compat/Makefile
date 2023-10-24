@@ -42,5 +42,5 @@ compat-$(CPTCFG_KERNEL_5_5) += backport-5.5.o
 compat-$(CPTCFG_KERNEL_5_13) += backport-5.13.o
 compat-$(CPTCFG_KERNEL_5_15) += backport-5.15.o
 compat-y += backport-5.10.o backport-5.19.o
-compat-y += slub.o slab.o ptrace.o
+compat-y += slub.o slab.o ptrace.o vmscan.o swap.o dma-resv.o
 i915-compat-y += $(compat-y)
